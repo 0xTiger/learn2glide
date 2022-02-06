@@ -13,10 +13,9 @@ struct Aircraft {
 impl Aircraft {
     
     fn draw(&self) {
-        // sin(rot) = y_offset / 1
-        // cos(rot) = x_offset
-        let x_offset = self.rot.cos() * 10.0;
-        let y_offset = self.rot.sin() * 10.0;
+        let glider_size = 20.0;
+        let x_offset = self.rot.cos() * glider_size;
+        let y_offset = self.rot.sin() * glider_size;
 
         let x1 = self.x - x_offset;
         let y1 = self.y - y_offset;
@@ -78,8 +77,14 @@ async fn main() {
         if is_key_down(KeyCode::Left) {
             myplane.rotate(0.05);
         }
+
         if is_key_down(KeyCode::Right) {
             myplane.rotate(-0.05);
+        }
+        
+        if is_key_down(KeyCode::Space) {
+            myplane.x_vel += myplane.rot.cos() * 0.1;
+            myplane.y_vel += myplane.rot.sin() * 0.1;
         }
 
         if is_key_down(KeyCode::Enter) {
@@ -88,6 +93,7 @@ async fn main() {
             myplane.x_vel = 0.0;
             myplane.y_vel = 0.0;
         }
+
 
         myplane.draw();
         // Gravity
