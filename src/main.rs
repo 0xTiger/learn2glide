@@ -2,10 +2,8 @@ use macroquad::prelude::*;
 use std::f32::consts::PI;
 
 struct Aircraft {
-    x: f32,
-    y: f32,
-    x_vel: f32,
-    y_vel: f32,
+    pos: Vec2,
+    vel: Vec2,
     rot: f32 // pi/2 to - pi/2
 }
 
@@ -13,14 +11,14 @@ struct Aircraft {
 impl Aircraft {
     
     fn draw(&self) {
-        let glider_size = 20.0;
+        let glider_size = 10.0;
         let x_offset = self.rot.cos() * glider_size;
         let y_offset = self.rot.sin() * glider_size;
 
-        let x1 = self.x - x_offset;
-        let y1 = self.y - y_offset;
-        let x2 = self.x + x_offset;
-        let y2 = self.y + y_offset;
+        let x1 = self.pos[0] - x_offset;
+        let y1 = self.pos[1] - y_offset;
+        let x2 = self.pos[0] + x_offset;
+        let y2 = self.pos[1] + y_offset;
 
         draw_line(x1, screen_height() - y1, 
                     x2, screen_height() - y2, 3.0, YELLOW);
@@ -31,44 +29,38 @@ impl Aircraft {
     }
 
     fn update_pos(&mut self) {
-        self.x += self.x_vel;
-        self.y += self.y_vel;
+        self.pos += self.vel;
         
     }
 
     fn do_lift(&mut self) {
         let lift_dir = self.rot + PI / 2.0;
         let down_dir = self.rot - PI / 2.0;
-        let vel_dir = dir(self.y_vel, self.x_vel);
+        let vel_dir = dir(self.vel);
 
-        let mag_in_down_dir = mag(self.x_vel, self.y_vel) * (vel_dir - down_dir).abs().cos();
+        let mag_in_down_dir = self.vel.length() * (vel_dir - down_dir).abs().cos();
         let lift_x_accel = lift_dir.cos() * mag_in_down_dir * 0.1;
         let lift_y_accel = lift_dir.sin() * mag_in_down_dir * 0.1;
 
 
         draw_text(("lift_x_accel: ".to_owned() + lift_x_accel.to_string().as_str()).as_str(), 20.0, 30.0, 20.0, DARKGRAY);
         draw_text(("lift_y_accel: ".to_owned() + lift_y_accel.to_string().as_str()).as_str(), 20.0, 45.0, 20.0, DARKGRAY);
-        self.x_vel += lift_x_accel;
-        self.y_vel += lift_y_accel;
+        self.vel[0] += lift_x_accel;
+        self.vel[1] += lift_y_accel;
     }
         
 }
 
-fn dir(x: f32, y: f32) -> f32 {
-    (x / y).atan()
+fn dir(v: Vec2) -> f32 {
+    (v[1] / v[0]).atan()
 }
 
-fn mag(x: f32, y: f32) -> f32 {
-    (x.powi(2) + y.powi(2)).sqrt()
-}
 #[macroquad::main("L2F")]
 async fn main() {
 
-    let mut myplane = Aircraft { x: screen_width() / 2.0, 
-                                y: screen_height() / 1.1,
+    let mut myplane = Aircraft { pos: Vec2::new(screen_width() / 2.0, screen_height() / 1.1),
                                 rot: 0.0,
-                                x_vel: 0.0,
-                                y_vel: -0.0};
+                                vel: Vec2::ZERO};
     loop {
         clear_background(RED);
 
@@ -83,29 +75,27 @@ async fn main() {
         }
         
         if is_key_down(KeyCode::Space) {
-            myplane.x_vel += myplane.rot.cos() * 0.1;
-            myplane.y_vel += myplane.rot.sin() * 0.1;
+            myplane.vel[0] += myplane.rot.cos() * 0.1;
+            myplane.vel[1] += myplane.rot.sin() * 0.1;
         }
 
         if is_key_down(KeyCode::Enter) {
-            myplane.x = screen_width() / 2.0;
-            myplane.y = screen_height() / 2.0;
-            myplane.x_vel = 0.0;
-            myplane.y_vel = 0.0;
+            myplane.pos = Vec2::new(screen_width() / 2.0, screen_height() / 1.1);
+            myplane.vel = Vec2::ZERO;
         }
 
 
         myplane.draw();
         // Gravity
-        myplane.y_vel -= 0.01;
+        myplane.vel[1] -= 0.01;
         // Air resistance
         // myplane.y_vel *= 0.98;
         // myplane.x_vel *= 0.98;
         myplane.do_lift();
         
         myplane.update_pos();
-        draw_text(("x_vel: ".to_owned() + myplane.x_vel.to_string().as_str()).as_str(), 20.0, 60.0, 20.0, DARKGRAY);
-        draw_text(("y_vel: ".to_owned() + myplane.y_vel.to_string().as_str()).as_str(), 20.0, 75.0, 20.0, DARKGRAY);
+        draw_text(("x_vel: ".to_owned() + myplane.vel[0].to_string().as_str()).as_str(), 20.0, 60.0, 20.0, DARKGRAY);
+        draw_text(("y_vel: ".to_owned() + myplane.vel[1].to_string().as_str()).as_str(), 20.0, 75.0, 20.0, DARKGRAY);
         draw_text(myplane.rot.to_string().as_str(), 20.0, 15.0, 20.0, DARKGRAY);
         next_frame().await
     }
