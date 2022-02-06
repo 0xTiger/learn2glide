@@ -12,13 +12,12 @@ impl Aircraft {
     
     fn draw(&self) {
         let glider_size = 10.0;
-        let x_offset = self.rot.cos() * glider_size;
-        let y_offset = self.rot.sin() * glider_size;
+        let offset = vec2_from_polar(glider_size, self.rot);
 
-        let x1 = self.pos[0] - x_offset;
-        let y1 = self.pos[1] - y_offset;
-        let x2 = self.pos[0] + x_offset;
-        let y2 = self.pos[1] + y_offset;
+        let x1 = self.pos[0] - offset[0];
+        let y1 = self.pos[1] - offset[1];
+        let x2 = self.pos[0] + offset[0];
+        let y2 = self.pos[1] + offset[1];
 
         draw_line(x1, screen_height() - y1, 
                     x2, screen_height() - y2, 3.0, YELLOW);
@@ -34,25 +33,27 @@ impl Aircraft {
     }
 
     fn do_lift(&mut self) {
-        let lift_dir = self.rot + PI / 2.0;
         let down_dir = self.rot - PI / 2.0;
         let vel_dir = dir(self.vel);
+        
 
+        let lift_dir = self.rot + PI / 2.0;
         let mag_in_down_dir = self.vel.length() * (vel_dir - down_dir).abs().cos();
-        let lift_x_accel = lift_dir.cos() * mag_in_down_dir * 0.1;
-        let lift_y_accel = lift_dir.sin() * mag_in_down_dir * 0.1;
+        let lift_accel = vec2_from_polar(mag_in_down_dir * 0.1, lift_dir);
 
-
-        draw_text(("lift_x_accel: ".to_owned() + lift_x_accel.to_string().as_str()).as_str(), 20.0, 30.0, 20.0, DARKGRAY);
-        draw_text(("lift_y_accel: ".to_owned() + lift_y_accel.to_string().as_str()).as_str(), 20.0, 45.0, 20.0, DARKGRAY);
-        self.vel[0] += lift_x_accel;
-        self.vel[1] += lift_y_accel;
+        draw_text(("lift_x_accel: ".to_owned() + lift_accel[0].to_string().as_str()).as_str(), 20.0, 30.0, 20.0, DARKGRAY);
+        draw_text(("lift_y_accel: ".to_owned() + lift_accel[1].to_string().as_str()).as_str(), 20.0, 45.0, 20.0, DARKGRAY);
+        self.vel += lift_accel;
     }
         
 }
 
 fn dir(v: Vec2) -> f32 {
     (v[1] / v[0]).atan()
+}
+
+fn vec2_from_polar(r: f32, theta: f32) -> Vec2{
+    Vec2::new(r * theta.cos(), r * theta.sin())
 }
 
 #[macroquad::main("L2F")]
@@ -75,8 +76,7 @@ async fn main() {
         }
         
         if is_key_down(KeyCode::Space) {
-            myplane.vel[0] += myplane.rot.cos() * 0.1;
-            myplane.vel[1] += myplane.rot.sin() * 0.1;
+            myplane.vel += vec2_from_polar(0.1, myplane.rot)
         }
 
         if is_key_down(KeyCode::Enter) {
