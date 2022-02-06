@@ -35,16 +35,14 @@ impl Aircraft {
         
     }
 
-    fn do_lift(&mut self) {
+    fn lift(&mut self) -> Vec2{
         let down = vec2_from_polar(1.0, self.rot - PI / 2.0);
 
         let lift_dir = self.rot + PI / 2.0;
         let mag_in_down_dir = self.vel.length() * self.vel.angle_between(down).cos();
         let lift_accel = vec2_from_polar(mag_in_down_dir * 0.1, lift_dir);
 
-        draw_text(("lift_x_accel: ".to_owned() + lift_accel[0].to_string().as_str()).as_str(), 20.0, 30.0, 20.0, DARKGRAY);
-        draw_text(("lift_y_accel: ".to_owned() + lift_accel[1].to_string().as_str()).as_str(), 20.0, 45.0, 20.0, DARKGRAY);
-        self.vel += lift_accel;
+        return lift_accel;
     }
         
 }
@@ -74,7 +72,7 @@ async fn main() {
 
     let mut myplane = Aircraft { pos: Vec2::new(screen_width() / 2.0, screen_height() / 1.1),
                                 rot: 0.0,
-                                vel: Vec2::ZERO};
+                                vel: -Vec2::Y};
     loop {
 
         // draw_line(40.0, 40.0, 100.0, 200.0, 15.0, BLUE);
@@ -87,10 +85,10 @@ async fn main() {
         if is_key_down(KeyCode::Right) {
             myplane.rotate(-0.05);
         }
-        
+        let mut boost = Vec2::ZERO;
         if is_key_down(KeyCode::Space) {
-            myplane.vel += vec2_from_polar(0.1, myplane.rot)
-        }
+            boost = vec2_from_polar(0.1, myplane.rot);
+        } else
 
         if is_key_down(KeyCode::Enter) {
             myplane.pos = Vec2::new(screen_width() / 2.0, screen_height() / 1.1);
@@ -100,22 +98,25 @@ async fn main() {
         set_default_camera();
 
         // Gravity
-        myplane.vel[1] -= 0.01;
+        let lift = myplane.lift();
+        let gravity = -0.01 * Vec2::Y;
+
+        let accel = lift + gravity + boost;
+        myplane.vel += accel;
         // Air resistance
         // myplane.y_vel *= 0.98;
         // myplane.x_vel *= 0.98;
-        myplane.do_lift();
         
         let cam = Camera2D {
             zoom: 0.002 * Vec2::new(1.0, -1.0),
             target: Vec2::new(myplane.pos[0], screen_height() - myplane.pos[1]),
             ..Default::default()
         };
-        // draw_text(("x_vel: ".to_owned() + myplane.vel[0].to_string().as_str()).as_str(), 20.0, 60.0, 20.0, DARKGRAY);
-        // draw_text(("y_vel: ".to_owned() + myplane.vel[1].to_string().as_str()).as_str(), 20.0, 75.0, 20.0, DARKGRAY);
-        draw_text(format!("pos: {:#.2}", myplane.pos.round()).as_str(), 20.0, 60.0, 20.0, DARKGRAY);
-        draw_text(format!("vel: {:#.2}", myplane.vel).as_str(), 20.0, 75.0, 20.0, DARKGRAY);
-        draw_text(myplane.rot.to_string().as_str(), 20.0, 15.0, 20.0, DARKGRAY);
+
+        draw_text(format!("rot: {}", myplane.rot).as_str(), 20.0, 15.0, 20.0, DARKGRAY);
+        draw_text(format!("pos:   {}", myplane.pos.round()).as_str(), 20.0, 30.0, 20.0, DARKGRAY);
+        draw_text(format!("vel:   {}", myplane.vel).as_str(), 20.0, 45.0, 20.0, DARKGRAY);
+        draw_text(format!("accel: {}", accel).as_str(), 20.0, 60.0, 20.0, DARKGRAY);
         
         set_camera(&cam);
         
