@@ -61,10 +61,6 @@ impl Aircraft {
         
 }
 
-fn dir(v: Vec2) -> f32 {
-    v.angle_between(Vec2::X)
-}
-
 fn vec2_from_polar(r: f32, theta: f32) -> Vec2{
     Vec2::new(r * theta.cos(), r * theta.sin())
 }
@@ -98,6 +94,7 @@ async fn main() {
         draw_text(format!("pos:   {}", myplane.pos.round()).as_str(), 20.0, 30.0, 20.0, DARKGRAY);
         draw_text(format!("vel:   {}", myplane.vel).as_str(), 20.0, 45.0, 20.0, DARKGRAY);
         draw_text(format!("accel: {}", accel).as_str(), 20.0, 60.0, 20.0, DARKGRAY);
+        draw_line(0.0, 75.0, myplane.fuel * 300.0 / 100.0, 75.0, 5.0, RED);
 
         let cam = Camera2D {
             zoom: 0.002 * Vec2::new(1.0, -1.0),
@@ -116,9 +113,9 @@ async fn main() {
             myplane.rotate(-0.05);
         }
         let mut boost = Vec2::ZERO;
-        if is_key_down(KeyCode::Space) {
+        if is_key_down(KeyCode::Space) && myplane.fuel > 0.0 {
             boost = vec2_from_polar(0.1, myplane.rot);
-            myplane.fuel -= 1.0;
+            myplane.fuel -= 0.2;
             myplane.draw_boost();
         } else
         
