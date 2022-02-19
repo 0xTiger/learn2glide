@@ -69,17 +69,24 @@ fn draw_mountain(x: f32, y : f32, w: f32) {
     draw_line(x, y, x + w, FLOOR_HEIGHT, 3.0, GREEN);
     draw_line(x, y, x - w, FLOOR_HEIGHT, 3.0, GREEN);
 }
+
+fn draw_text_centered(text: &str, x: f32, y: f32, font_size: f32, color: Color) {
+    let text_dims = measure_text(text, None, font_size as u16, 1.0);
+    draw_text(text, x - text_dims.width / 2.0, 
+                    y + text_dims.height / 2.0, 
+                    font_size, color)
+}
 fn setup_background() {
     // TODO Avoid recalculating cosmetic things like background
     rand::srand(0);
-    clear_background(BLACK);
+    clear_background(GRAY);
     for i in (0..3000).map(|x| rand::gen_range(0.0, 1000.0) *  x as f32) {
         draw_mountain(i, FLOOR_HEIGHT - rand::gen_range(0.0, 200.0), rand::gen_range(0.0, 100.0));
     }
     // Draw floor
-    draw_line(0.0, FLOOR_HEIGHT, 1e10, FLOOR_HEIGHT, 5.0, ORANGE);
+    draw_line(-1e10, FLOOR_HEIGHT, 1e10, FLOOR_HEIGHT, 5.0, GREEN);
 }
-#[macroquad::main("L2F")]
+#[macroquad::main("learn2glide")]
 async fn main() {
 
     let mut myplane = Aircraft { pos: Vec2::new(screen_width() / 2.0, screen_height() / 1.1),
@@ -124,20 +131,39 @@ async fn main() {
         }
         
         
-        // Gravity
+        // Forces
         let lift = myplane.lift();
-        let gravity = -0.01 * Vec2::Y;
-        
-        accel = lift + gravity + boost;
+        let gravity = -0.03 * Vec2::Y;
+        let drag = -1e-4 * myplane.vel.powf(2.0);
+
+        accel = lift + gravity + boost + drag;
         myplane.vel += accel;
-        // Air resistance
-        // myplane.y_vel *= 0.98;
-        // myplane.x_vel *= 0.98;
         
         myplane.draw();
         
         
         myplane.update_pos();
+        if screen_height() - myplane.pos[1] > FLOOR_HEIGHT {
+            loop {
+                if is_key_down(KeyCode::Enter){
+                    break
+                }
+                set_default_camera();
+                
+                let x = screen_width() / 2.0;
+                let y = screen_height() / 2.0;
+                draw_text_centered("You flew a distance of:", x, y - 100.0, 50.0, WHITE);
+                draw_text_centered(format!("{}", myplane.pos[0].round()).as_str(), x, y, 100.0, WHITE);
+                draw_text_centered("Press ENTER to play again.", x, y + 100.0, 50.0, WHITE);
+                next_frame().await
+            }
+
+            myplane = Aircraft { pos: Vec2::new(screen_width() / 2.0, screen_height() / 1.1),
+                rot: 0.0,
+                vel: -Vec2::Y,
+                fuel: 100.0};
+
+        }
         next_frame().await
     }
 }
