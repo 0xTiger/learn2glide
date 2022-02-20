@@ -94,6 +94,7 @@ async fn main() {
                                 vel: -Vec2::Y,
                                 fuel: 100.0};
     let mut accel = Vec2::ZERO;
+    let mut fpss = Vec::new();
     loop {
         setup_background();
         set_default_camera();
@@ -102,6 +103,13 @@ async fn main() {
         draw_text(format!("vel:   {}", myplane.vel).as_str(), 20.0, 45.0, 20.0, DARKGRAY);
         draw_text(format!("accel: {}", accel).as_str(), 20.0, 60.0, 20.0, DARKGRAY);
         draw_line(0.0, 75.0, myplane.fuel * 300.0 / 100.0, 75.0, 5.0, RED);
+
+        fpss.push(get_fps());
+        let l = fpss.len().saturating_sub(10);
+        let fps_window = &fpss[l..];
+        let fps = fps_window.iter().sum::<i32>() as f32 / fps_window.len() as f32;
+
+        draw_text(format!("fps: {}", fps).as_str(), screen_width() - 100.0, 15.0, 20.0, DARKGRAY);
 
         let cam = Camera2D {
             zoom: 0.002 * Vec2::new(1.0, -1.0),
