@@ -10,8 +10,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4.2.5
+      - name: SSH Remote Commands
+        uses: appleboy/ssh-action@v0.1.4
         with:
-          branch: master
-          folder: .
+          host: ${{ secrets.SSH_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_KEY }}
+          script: ls -la
+
