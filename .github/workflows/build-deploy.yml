@@ -17,4 +17,5 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_KEY }}
           script: ls -la
+          debug: true
 
