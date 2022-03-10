@@ -10,12 +10,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: SSH Remote Commands
+      - name: Build wasm binary
         uses: appleboy/ssh-action@v0.1.4
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ubuntu
           key: ${{ secrets.SSH_KEY }}
-          script: ls -la
-          debug: true
+          script: |
+            cd site/${{ github.event.repository.name }}
+            git checkout master
+            git pull
+            cargo build --target wasm32-unknown-unknown --release 
 
