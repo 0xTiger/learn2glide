@@ -1,10 +1,11 @@
-use macroquad::prelude::*;
-
 mod utils;
 mod aircraft;
 
-const FLOOR_HEIGHT: f32 = 1000.0;
+use macroquad::prelude::*;
+use aircraft::Aircraft;
 
+
+const FLOOR_HEIGHT: f32 = 1000.0;
 
 
 fn draw_mountain(x: f32, y : f32, w: f32) {
@@ -18,13 +19,6 @@ fn draw_text_centered(text: &str, x: f32, y: f32, font_size: f32, color: Color) 
     draw_text(text, x - text_dims.width / 2.0, 
                     y + text_dims.height / 2.0, 
                     font_size, color)
-}
-
-
-fn get_avg_fps(fpss: &Vec<i32>) -> f32{
-    let l = fpss.len().saturating_sub(10);
-    let fps_window = &fpss[l..];
-    fps_window.iter().sum::<i32>() as f32 / fps_window.len() as f32
 }
 
 
@@ -57,7 +51,7 @@ fn setup_background() {
 #[macroquad::main("learn2glide")]
 async fn main() {
 
-    let mut myplane = aircraft::Aircraft { ..Default::default() };
+    let mut myplane = Aircraft { ..Default::default() };
     let mut fpss = Vec::new();
     loop {
         setup_background();
@@ -68,8 +62,8 @@ async fn main() {
         draw_text(format!("accel: {}", myplane.accel).as_str(), 20.0, 60.0, 20.0, DARKGRAY);
         draw_line(0.0, 75.0, myplane.fuel * 300.0 / 100.0, 75.0, 5.0, RED);
 
-        fpss.push(get_fps());
-        let fps = get_avg_fps(&fpss);
+        fpss.push(get_fps() as i16);
+        let fps = utils::avg_last_n(&fpss, 10);
         draw_text(format!("fps: {fps}").as_str(), screen_width() - 100.0, 15.0, 20.0, DARKGRAY);
 
         let cam = Camera2D {
@@ -95,7 +89,6 @@ async fn main() {
             myplane.draw_boost();
         }
         
-
         // Forces
         let lift = myplane.lift();
         let gravity = -0.03 * Vec2::Y;
@@ -108,9 +101,7 @@ async fn main() {
 
         if screen_height() - myplane.pos.y > FLOOR_HEIGHT {
             death_screen(myplane.pos.x).await;
-
-            myplane = aircraft::Aircraft { ..Default::default() };
-
+            myplane = Aircraft { ..Default::default() };
         }
         next_frame().await
     }
