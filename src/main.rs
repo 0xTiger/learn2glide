@@ -17,26 +17,21 @@ impl Aircraft {
         let glider_size = 10.0;
         let offset = vec2_from_polar(glider_size, self.rot);
 
-        let x1 = self.pos[0] - offset[0];
-        let y1 = self.pos[1] - offset[1];
-        let x2 = self.pos[0] + offset[0];
-        let y2 = self.pos[1] + offset[1];
+        let lower = self.pos - offset;
+        let upper = self.pos + offset;
 
-        draw_line(x1, screen_height() - y1, 
-                    x2, screen_height() - y2, 3.0, GREEN);
+        draw_line(lower.x, screen_height() - lower.y, upper.x, screen_height() - upper.y, 3.0, GREEN);
     }
 
     fn draw_boost(&self) {
         let glider_size = 10.0;
         let offset = vec2_from_polar(glider_size, self.rot);
 
-        let x1 = self.pos[0] - 2.0*offset[0];
-        let y1 = self.pos[1] - 2.0*offset[1];
-        let x2 = self.pos[0] - 1.5*offset[0];
-        let y2 = self.pos[1] - 1.5*offset[1];
+        let lower = self.pos - 2.0*offset;
+        let upper = self.pos - 1.5*offset;
 
-        draw_line(x1, screen_height() - y1, 
-                    x2, screen_height() - y2, 3.0, RED);
+        draw_line(lower.x, screen_height() - lower.y, 
+                    upper.x, screen_height() - upper.y, 3.0, RED);
     }
 
     fn rotate(&mut self, amount: f32) {
@@ -61,14 +56,29 @@ impl Aircraft {
         
 }
 
+
+impl Default for Aircraft {
+    fn default() -> Aircraft {
+        Aircraft { 
+            pos: Vec2::new(screen_width() / 2.0, screen_height() / 1.1),
+            rot: 0.0,
+            vel: -Vec2::Y,
+            fuel: 100.0
+        }
+    }
+}
+
+
 fn vec2_from_polar(r: f32, theta: f32) -> Vec2{
     Vec2::new(r * theta.cos(), r * theta.sin())
 }
+
 
 fn draw_mountain(x: f32, y : f32, w: f32) {
     draw_line(x, y, x + w, FLOOR_HEIGHT, 3.0, GREEN);
     draw_line(x, y, x - w, FLOOR_HEIGHT, 3.0, GREEN);
 }
+
 
 fn draw_text_centered(text: &str, x: f32, y: f32, font_size: f32, color: Color) {
     let text_dims = measure_text(text, None, font_size as u16, 1.0);
@@ -76,6 +86,29 @@ fn draw_text_centered(text: &str, x: f32, y: f32, font_size: f32, color: Color) 
                     y + text_dims.height / 2.0, 
                     font_size, color)
 }
+
+
+fn get_avg_fps(fpss: &Vec<i32>) -> f32{
+    let l = fpss.len().saturating_sub(10);
+    let fps_window = &fpss[l..];
+    fps_window.iter().sum::<i32>() as f32 / fps_window.len() as f32
+}
+
+
+async fn death_screen(score: f32) {
+    loop {
+        if is_key_down(KeyCode::Enter) { break }
+        set_default_camera();
+        
+        let x = screen_width() / 2.0;
+        let y = screen_height() / 2.0;
+        draw_text_centered("You flew a distance of:", x, y - 100.0, 50.0, WHITE);
+        draw_text_centered(format!("{}", score.round()).as_str(), x, y, 100.0, WHITE);
+        draw_text_centered("Press ENTER to play again.", x, y + 100.0, 50.0, WHITE);
+        next_frame().await
+    }
+}
+
 fn setup_background() {
     // TODO Avoid recalculating cosmetic things like background
     rand::srand(0);
@@ -86,13 +119,12 @@ fn setup_background() {
     // Draw floor
     draw_line(-1e10, FLOOR_HEIGHT, 1e10, FLOOR_HEIGHT, 5.0, GREEN);
 }
+
+
 #[macroquad::main("learn2glide")]
 async fn main() {
 
-    let mut myplane = Aircraft { pos: Vec2::new(screen_width() / 2.0, screen_height() / 1.1),
-                                rot: 0.0,
-                                vel: -Vec2::Y,
-                                fuel: 100.0};
+    let mut myplane = Aircraft { ..Default::default() };
     let mut accel = Vec2::ZERO;
     let mut fpss = Vec::new();
     loop {
@@ -105,15 +137,12 @@ async fn main() {
         draw_line(0.0, 75.0, myplane.fuel * 300.0 / 100.0, 75.0, 5.0, RED);
 
         fpss.push(get_fps());
-        let l = fpss.len().saturating_sub(10);
-        let fps_window = &fpss[l..];
-        let fps = fps_window.iter().sum::<i32>() as f32 / fps_window.len() as f32;
-
-        draw_text(format!("fps: {}", fps).as_str(), screen_width() - 100.0, 15.0, 20.0, DARKGRAY);
+        let fps = get_avg_fps(&fpss);
+        draw_text(format!("fps: {fps}").as_str(), screen_width() - 100.0, 15.0, 20.0, DARKGRAY);
 
         let cam = Camera2D {
             zoom: 0.002 * Vec2::new(1.0, -1.0),
-            target: Vec2::new(myplane.pos[0], screen_height() - myplane.pos[1]),
+            target: Vec2::new(myplane.pos.x, screen_height() - myplane.pos.y),
             ..Default::default()
         };
 
@@ -132,10 +161,6 @@ async fn main() {
             boost = vec2_from_polar(0.1, myplane.rot);
             myplane.fuel -= 0.2;
             myplane.draw_boost();
-        } else
-        
-        if is_key_down(KeyCode::Enter) {
-            myplane.vel = Vec2::ZERO;
         }
         
         
@@ -151,25 +176,10 @@ async fn main() {
         
         
         myplane.update_pos();
-        if screen_height() - myplane.pos[1] > FLOOR_HEIGHT {
-            loop {
-                if is_key_down(KeyCode::Enter){
-                    break
-                }
-                set_default_camera();
-                
-                let x = screen_width() / 2.0;
-                let y = screen_height() / 2.0;
-                draw_text_centered("You flew a distance of:", x, y - 100.0, 50.0, WHITE);
-                draw_text_centered(format!("{}", myplane.pos[0].round()).as_str(), x, y, 100.0, WHITE);
-                draw_text_centered("Press ENTER to play again.", x, y + 100.0, 50.0, WHITE);
-                next_frame().await
-            }
+        if screen_height() - myplane.pos.y > FLOOR_HEIGHT {
+            death_screen(myplane.pos.x).await;
 
-            myplane = Aircraft { pos: Vec2::new(screen_width() / 2.0, screen_height() / 1.1),
-                rot: 0.0,
-                vel: -Vec2::Y,
-                fuel: 100.0};
+            myplane = Aircraft { ..Default::default() };
 
         }
         next_frame().await
