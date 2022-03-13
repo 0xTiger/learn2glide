@@ -1,80 +1,10 @@
 use macroquad::prelude::*;
-use std::f32::consts::PI;
+
+mod utils;
+mod aircraft;
 
 const FLOOR_HEIGHT: f32 = 1000.0;
 
-struct Aircraft {
-    pos: Vec2,
-    vel: Vec2,
-    accel: Vec2,
-    rot: f32, // pi/2 to - pi/2
-    fuel: f32
-}
-
-
-impl Default for Aircraft {
-    fn default() -> Aircraft {
-        Aircraft { 
-            pos: Vec2::new(screen_width() / 2.0, screen_height() / 1.1),
-            vel: -Vec2::Y,
-            accel: Vec2::ZERO,
-            rot: 0.0,
-            fuel: 100.0,
-        }
-    }
-}
-
-
-impl Aircraft {
-    
-    fn draw(&self) {
-        let glider_size = 10.0;
-        let offset = vec2_from_polar(glider_size, self.rot);
-
-        let lower = self.pos - offset;
-        let upper = self.pos + offset;
-
-        draw_line(lower.x, screen_height() - lower.y, upper.x, screen_height() - upper.y, 3.0, GREEN);
-    }
-
-    fn draw_boost(&self) {
-        let glider_size = 10.0;
-        let offset = vec2_from_polar(glider_size, self.rot);
-
-        let lower = self.pos - 2.0*offset;
-        let upper = self.pos - 1.5*offset;
-
-        draw_line(lower.x, screen_height() - lower.y, 
-                    upper.x, screen_height() - upper.y, 3.0, RED);
-    }
-
-    fn rotate(&mut self, amount: f32) {
-        self.rot = (self.rot + amount).clamp(-PI / 2.0, PI / 2.0)
-    }
-
-    fn update_pos(&mut self) {
-        self.vel += self.accel;
-        self.pos += self.vel;
-        
-    }
-
-    fn lift(&mut self) -> Vec2{
-        let down = vec2_from_polar(1.0, self.rot - PI / 2.0);
-
-        let lift_dir = self.rot + PI / 2.0;
-        let eps = Vec2::new(f32::EPSILON, f32::EPSILON);
-        let mag_in_down_dir = self.vel.length() * (self.vel + eps).angle_between(down).cos();
-        let lift_accel = vec2_from_polar(mag_in_down_dir * 0.1, lift_dir);
-
-        return lift_accel;
-    }
-        
-}
-
-
-fn vec2_from_polar(r: f32, theta: f32) -> Vec2{
-    Vec2::new(r * theta.cos(), r * theta.sin())
-}
 
 
 fn draw_mountain(x: f32, y : f32, w: f32) {
@@ -127,7 +57,7 @@ fn setup_background() {
 #[macroquad::main("learn2glide")]
 async fn main() {
 
-    let mut myplane = Aircraft { ..Default::default() };
+    let mut myplane = aircraft::Aircraft { ..Default::default() };
     let mut fpss = Vec::new();
     loop {
         setup_background();
@@ -160,12 +90,12 @@ async fn main() {
         }
         let mut boost = Vec2::ZERO;
         if is_key_down(KeyCode::Space) && myplane.fuel > 0.0 {
-            boost = vec2_from_polar(0.1, myplane.rot);
+            boost = utils::vec2_from_polar(0.1, myplane.rot);
             myplane.fuel -= 0.2;
             myplane.draw_boost();
         }
         
-        
+
         // Forces
         let lift = myplane.lift();
         let gravity = -0.03 * Vec2::Y;
@@ -179,7 +109,7 @@ async fn main() {
         if screen_height() - myplane.pos.y > FLOOR_HEIGHT {
             death_screen(myplane.pos.x).await;
 
-            myplane = Aircraft { ..Default::default() };
+            myplane = aircraft::Aircraft { ..Default::default() };
 
         }
         next_frame().await
