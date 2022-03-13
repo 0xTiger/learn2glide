@@ -6,8 +6,22 @@ const FLOOR_HEIGHT: f32 = 1000.0;
 struct Aircraft {
     pos: Vec2,
     vel: Vec2,
+    accel: Vec2,
     rot: f32, // pi/2 to - pi/2
     fuel: f32
+}
+
+
+impl Default for Aircraft {
+    fn default() -> Aircraft {
+        Aircraft { 
+            pos: Vec2::new(screen_width() / 2.0, screen_height() / 1.1),
+            vel: -Vec2::Y,
+            accel: Vec2::ZERO,
+            rot: 0.0,
+            fuel: 100.0,
+        }
+    }
 }
 
 
@@ -39,6 +53,7 @@ impl Aircraft {
     }
 
     fn update_pos(&mut self) {
+        self.vel += self.accel;
         self.pos += self.vel;
         
     }
@@ -54,18 +69,6 @@ impl Aircraft {
         return lift_accel;
     }
         
-}
-
-
-impl Default for Aircraft {
-    fn default() -> Aircraft {
-        Aircraft { 
-            pos: Vec2::new(screen_width() / 2.0, screen_height() / 1.1),
-            rot: 0.0,
-            vel: -Vec2::Y,
-            fuel: 100.0
-        }
-    }
 }
 
 
@@ -125,7 +128,6 @@ fn setup_background() {
 async fn main() {
 
     let mut myplane = Aircraft { ..Default::default() };
-    let mut accel = Vec2::ZERO;
     let mut fpss = Vec::new();
     loop {
         setup_background();
@@ -133,7 +135,7 @@ async fn main() {
         draw_text(format!("rot:   {}", myplane.rot).as_str(), 20.0, 15.0, 20.0, DARKGRAY);
         draw_text(format!("pos:   {}", myplane.pos.round()).as_str(), 20.0, 30.0, 20.0, DARKGRAY);
         draw_text(format!("vel:   {}", myplane.vel).as_str(), 20.0, 45.0, 20.0, DARKGRAY);
-        draw_text(format!("accel: {}", accel).as_str(), 20.0, 60.0, 20.0, DARKGRAY);
+        draw_text(format!("accel: {}", myplane.accel).as_str(), 20.0, 60.0, 20.0, DARKGRAY);
         draw_line(0.0, 75.0, myplane.fuel * 300.0 / 100.0, 75.0, 5.0, RED);
 
         fpss.push(get_fps());
@@ -169,13 +171,11 @@ async fn main() {
         let gravity = -0.03 * Vec2::Y;
         let drag = -1e-4 * myplane.vel.powf(2.0);
 
-        accel = lift + gravity + boost + drag;
-        myplane.vel += accel;
-        
+        myplane.accel = lift + gravity + boost + drag;
+
         myplane.draw();
-        
-        
         myplane.update_pos();
+
         if screen_height() - myplane.pos.y > FLOOR_HEIGHT {
             death_screen(myplane.pos.x).await;
 
