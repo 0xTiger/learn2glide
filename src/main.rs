@@ -5,7 +5,24 @@ use macroquad::prelude::*;
 use aircraft::Aircraft;
 
 
-const FLOOR_HEIGHT: f32 = 1000.0;
+const FLOOR_HEIGHT: f32 = 0.0;
+
+
+struct Meteor {
+    pos: Vec2,
+    vel: Vec2
+}
+
+
+impl Meteor {
+    fn draw(&self) {
+        draw_circle(self.pos.x, self.pos.y, 10., BLACK);
+    }
+
+    pub fn update_pos(&mut self) {
+        self.pos += self.vel;
+    }
+}
 
 
 fn draw_mountain(x: f32, y : f32, w: f32) {
@@ -41,7 +58,7 @@ fn setup_background() {
     rand::srand(0);
     clear_background(GRAY);
     for i in (0..3000).map(|x| rand::gen_range(0.0, 1000.0) *  x as f32) {
-        draw_mountain(i, FLOOR_HEIGHT - rand::gen_range(0.0, 200.0), rand::gen_range(0.0, 100.0));
+        draw_mountain(i, FLOOR_HEIGHT + rand::gen_range(0.0, 200.0), rand::gen_range(0.0, 100.0));
     }
     // Draw floor
     draw_line(-1e10, FLOOR_HEIGHT, 1e10, FLOOR_HEIGHT, 5.0, GREEN);
@@ -53,8 +70,26 @@ async fn main() {
 
     let mut myplane = Aircraft { ..Default::default() };
     let mut fpss = Vec::new();
+
+    let mut meteors = Vec::new();
+    for i in 1..30 {
+        meteors.push(Meteor { pos: Vec2::new((i * 1000) as f32, FLOOR_HEIGHT + 1000.), 
+                            vel: - Vec2::X - Vec2::Y});
+    }
+
     loop {
         setup_background();
+        for meteor in &mut meteors {
+            if meteor.pos.y > FLOOR_HEIGHT {
+                meteor.draw();
+                meteor.update_pos();
+                if (myplane.pos - meteor.pos).length() < 10.0 {
+                    death_screen(myplane.pos.x).await;
+                    myplane = Aircraft { ..Default::default() };
+                }
+
+            }
+        }
         set_default_camera();
         draw_text(format!("rot:   {}", myplane.rot).as_str(), 20.0, 15.0, 20.0, DARKGRAY);
         draw_text(format!("pos:   {}", myplane.pos.round()).as_str(), 20.0, 30.0, 20.0, DARKGRAY);
@@ -67,11 +102,11 @@ async fn main() {
         draw_text(format!("fps: {fps}").as_str(), screen_width() - 100.0, 15.0, 20.0, DARKGRAY);
 
         let cam = Camera2D {
-            zoom: 0.002 * Vec2::new(1.0, -1.0),
-            target: Vec2::new(myplane.pos.x, screen_height() - myplane.pos.y),
+            zoom: 0.002 * Vec2::new(1.0, 1.0),
+            target: Vec2::new(myplane.pos.x, myplane.pos.y),
             ..Default::default()
         };
-
+        
         
         set_camera(&cam);
 
@@ -99,7 +134,7 @@ async fn main() {
         myplane.draw();
         myplane.update_pos();
 
-        if screen_height() - myplane.pos.y > FLOOR_HEIGHT {
+        if myplane.pos.y < FLOOR_HEIGHT {
             death_screen(myplane.pos.x).await;
             myplane = Aircraft { ..Default::default() };
         }

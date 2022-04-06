@@ -2,7 +2,8 @@ use macroquad::{
     math::Vec2, 
     color::colors::*, 
     shapes::*,
-    window::*};
+};
+
 use std::f32::consts::PI;
 use crate::utils::vec2_from_polar;
 
@@ -18,7 +19,7 @@ pub struct Aircraft {
 impl Default for Aircraft {
     fn default() -> Aircraft {
         Aircraft { 
-            pos: Vec2::new(screen_width() / 2.0, screen_height() / 1.1),
+            pos: Vec2::new(0., 1000.),
             vel: -Vec2::Y,
             accel: Vec2::ZERO,
             rot: 0.0,
@@ -36,7 +37,7 @@ impl Aircraft {
         let lower = self.pos - offset;
         let upper = self.pos + offset;
 
-        draw_line(lower.x, screen_height() - lower.y, upper.x, screen_height() - upper.y, 3.0, GREEN);
+        draw_line(lower.x, lower.y, upper.x, upper.y, 3.0, GREEN);
     }
 
     pub fn draw_boost(&self) {
@@ -46,8 +47,8 @@ impl Aircraft {
         let lower = self.pos - 2.0*offset;
         let upper = self.pos - 1.5*offset;
 
-        draw_line(lower.x, screen_height() - lower.y, 
-                    upper.x, screen_height() - upper.y, 3.0, RED);
+        draw_line(lower.x, lower.y, 
+                    upper.x, upper.y, 3.0, RED);
     }
 
     pub fn rotate(&mut self, amount: f32) {
