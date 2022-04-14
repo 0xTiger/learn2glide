@@ -6,3 +6,4 @@ See the static site at [tom.cv/learn2glide](https://tom.cv/learn2glide) or, equi
 
 The left & right arrow keys control the pitch of the aircraft.
 Pressing Space gives a boost.
+Aim for the hoops, each colour of hoop has a different effect

@@ -102,8 +102,8 @@ async fn main() {
         draw_text(format!("fps: {fps}").as_str(), screen_width() - 100.0, 15.0, 20.0, DARKGRAY);
 
         let cam = Camera2D {
-            zoom: 0.002 * Vec2::new(1.0, 1.0),
-            target: Vec2::new(myplane.pos.x, myplane.pos.y),
+            zoom: 0.002 * Vec2::ONE,
+            target: myplane.pos,
             ..Default::default()
         };
         
