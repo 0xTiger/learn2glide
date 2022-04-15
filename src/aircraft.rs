@@ -1,8 +1,11 @@
+use super::utils;
 use macroquad::{
     math::Vec2, 
     color::colors::*, 
     shapes::*,
+    input::*
 };
+
 
 use std::f32::consts::PI;
 use crate::utils::vec2_from_polar;
@@ -58,18 +61,35 @@ impl Aircraft {
     pub fn update_pos(&mut self) {
         self.vel += self.accel;
         self.pos += self.vel;
-        
     }
 
-    pub fn lift(&mut self) -> Vec2{
+    pub fn lift(&mut self) -> Vec2 {
         let down = vec2_from_polar(1.0, self.rot - PI / 2.0);
-
         let lift_dir = self.rot + PI / 2.0;
         let eps = Vec2::new(f32::EPSILON, f32::EPSILON);
         let mag_in_down_dir = self.vel.length() * (self.vel + eps).angle_between(down).cos();
-        let lift_accel = vec2_from_polar(mag_in_down_dir * 0.1, lift_dir);
-
-        return lift_accel;
-    }
         
+        vec2_from_polar(mag_in_down_dir * 0.1, lift_dir)
+    }
+    
+    pub fn boost(&self) -> Vec2 {
+        if is_key_down(KeyCode::Space) && self.fuel > 0.0 { 
+            utils::vec2_from_polar(0.1, self.rot) 
+        } else {
+            Vec2::ZERO
+        }
+    }
+
+    pub fn check_input(&mut self) {
+        if is_key_down(KeyCode::Left) {
+            self.rotate(0.05);
+        }
+        if is_key_down(KeyCode::Right) {
+            self.rotate(-0.05);
+        }
+        if is_key_down(KeyCode::Space) && self.fuel > 0.0 {
+            self.fuel -= 0.2;
+            self.draw_boost();
+        }
+    }    
 }

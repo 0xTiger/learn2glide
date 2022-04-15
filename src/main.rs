@@ -39,6 +39,17 @@ async fn death_screen(score: f32) {
     }
 }
 
+
+fn draw_hud(plane: &Aircraft, fps: f32) {
+    draw_text(format!("rot:   {}", plane.rot).as_str(), 20.0, 15.0, 20.0, DARKGRAY);
+    draw_text(format!("pos:   {}", plane.pos.round()).as_str(), 20.0, 30.0, 20.0, DARKGRAY);
+    draw_text(format!("vel:   {}", plane.vel).as_str(), 20.0, 45.0, 20.0, DARKGRAY);
+    draw_text(format!("accel: {}", plane.accel).as_str(), 20.0, 60.0, 20.0, DARKGRAY);
+    draw_line(0.0, 75.0, plane.fuel * 300.0 / 100.0, 75.0, 5.0, RED);
+    draw_text(format!("fps: {fps}").as_str(), screen_width() - 100.0, 15.0, 20.0, DARKGRAY);
+}
+
+
 fn setup_background() {
     // TODO Avoid recalculating cosmetic things like background
     rand::srand(0);
@@ -84,15 +95,9 @@ async fn main() {
         hoops.retain(|hoop| hoop.kind != HoopKind::Dead);
 
         set_default_camera();
-        draw_text(format!("rot:   {}", myplane.rot).as_str(), 20.0, 15.0, 20.0, DARKGRAY);
-        draw_text(format!("pos:   {}", myplane.pos.round()).as_str(), 20.0, 30.0, 20.0, DARKGRAY);
-        draw_text(format!("vel:   {}", myplane.vel).as_str(), 20.0, 45.0, 20.0, DARKGRAY);
-        draw_text(format!("accel: {}", myplane.accel).as_str(), 20.0, 60.0, 20.0, DARKGRAY);
-        draw_line(0.0, 75.0, myplane.fuel * 300.0 / 100.0, 75.0, 5.0, RED);
-
         fpss.push(get_fps() as i16);
         let fps = utils::avg_last_n(&fpss, 10);
-        draw_text(format!("fps: {fps}").as_str(), screen_width() - 100.0, 15.0, 20.0, DARKGRAY);
+        draw_hud(&myplane, fps);
 
         let cam = Camera2D {
             zoom: 0.002 * Vec2::ONE,
@@ -102,27 +107,11 @@ async fn main() {
         
         
         set_camera(&cam);
-
-        if is_key_down(KeyCode::Left) {
-            myplane.rotate(0.05);
-        }
-
-        if is_key_down(KeyCode::Right) {
-            myplane.rotate(-0.05);
-        }
-        let mut boost = Vec2::ZERO;
-        if is_key_down(KeyCode::Space) && myplane.fuel > 0.0 {
-            boost = utils::vec2_from_polar(0.1, myplane.rot);
-            myplane.fuel -= 0.2;
-            myplane.draw_boost();
-        }
+        myplane.check_input();
         
         // Forces
-        let lift = myplane.lift();
-        
         let drag = -1e-4 * myplane.vel.powf(2.0);
-
-        myplane.accel = lift + GRAVITY + boost + drag;
+        myplane.accel = myplane.lift() + GRAVITY + myplane.boost() + drag;
 
         myplane.draw();
         myplane.update_pos();
