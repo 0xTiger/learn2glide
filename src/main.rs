@@ -1,28 +1,14 @@
 mod utils;
 mod aircraft;
+mod hoops;
 
 use macroquad::prelude::*;
 use aircraft::Aircraft;
+use hoops::{Hoop, HoopKind};
 
 
 const FLOOR_HEIGHT: f32 = 0.0;
-
-
-struct Meteor {
-    pos: Vec2,
-    vel: Vec2
-}
-
-
-impl Meteor {
-    fn draw(&self) {
-        draw_circle(self.pos.x, self.pos.y, 10., BLACK);
-    }
-
-    pub fn update_pos(&mut self) {
-        self.pos += self.vel;
-    }
-}
+const GRAVITY: Vec2 = const_vec2!([0., -0.03]);
 
 
 fn draw_mountain(x: f32, y : f32, w: f32) {
@@ -71,25 +57,32 @@ async fn main() {
     let mut myplane = Aircraft { ..Default::default() };
     let mut fpss = Vec::new();
 
-    let mut meteors = Vec::new();
+    let mut hoops = Vec::new();
     for i in 1..30 {
-        meteors.push(Meteor { pos: Vec2::new((i * 1000) as f32, FLOOR_HEIGHT + 1000.), 
-                            vel: - Vec2::X - Vec2::Y});
+        hoops.push(Hoop { 
+            pos: Vec2::new((i * 500) as f32, FLOOR_HEIGHT + 50.), 
+            vel: Vec2::new(3., 6.),
+            accel: GRAVITY,
+            size: 30.,
+            value: 30.,
+            kind: HoopKind::random()
+        });
     }
 
     loop {
         setup_background();
-        for meteor in &mut meteors {
-            if meteor.pos.y > FLOOR_HEIGHT {
-                meteor.draw();
-                meteor.update_pos();
-                if (myplane.pos - meteor.pos).length() < 10.0 {
-                    death_screen(myplane.pos.x).await;
-                    myplane = Aircraft { ..Default::default() };
-                }
-
+        for hoop in &mut hoops {
+            hoop.draw();
+            hoop.update_pos();
+            if (myplane.pos - hoop.pos).length() < hoop.size {
+                hoop.do_effect(&mut myplane);
+                hoop.kind = HoopKind::Dead;
+            } else if hoop.pos.y - hoop.size < FLOOR_HEIGHT {
+                hoop.kind = HoopKind::Dead;
             }
         }
+        hoops.retain(|hoop| hoop.kind != HoopKind::Dead);
+
         set_default_camera();
         draw_text(format!("rot:   {}", myplane.rot).as_str(), 20.0, 15.0, 20.0, DARKGRAY);
         draw_text(format!("pos:   {}", myplane.pos.round()).as_str(), 20.0, 30.0, 20.0, DARKGRAY);
@@ -126,10 +119,10 @@ async fn main() {
         
         // Forces
         let lift = myplane.lift();
-        let gravity = -0.03 * Vec2::Y;
+        
         let drag = -1e-4 * myplane.vel.powf(2.0);
 
-        myplane.accel = lift + gravity + boost + drag;
+        myplane.accel = lift + GRAVITY + boost + drag;
 
         myplane.draw();
         myplane.update_pos();

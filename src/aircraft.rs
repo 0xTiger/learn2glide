@@ -19,7 +19,7 @@ pub struct Aircraft {
 impl Default for Aircraft {
     fn default() -> Aircraft {
         Aircraft { 
-            pos: Vec2::new(0., 1000.),
+            pos: Vec2::new(0., 500.),
             vel: -Vec2::Y,
             accel: Vec2::ZERO,
             rot: 0.0,
