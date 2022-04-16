@@ -1,9 +1,9 @@
 use super::aircraft::Aircraft;
+use std::fs::read;
 use macroquad::{
     math::Vec2,
-    color::Color,
     color::colors::*, 
-    shapes::*,
+    texture::*,
     rand,
 };
 
@@ -40,14 +40,24 @@ impl HoopKind {
 
 
 impl Hoop {
+    // TODO Only read files once
     pub fn draw(&self) {
-        let hoop_color = match self.kind {
-            HoopKind::Fuel => RED,
-            HoopKind::Score => GOLD,
-            HoopKind::Boost => BLUE,
-            _ => Color::from_rgba(0, 0, 0, 0)
+        let file = match self.kind {
+            HoopKind::Fuel => read("hoop_fuel.png").unwrap(),
+            HoopKind::Score => read("hoop_score.png").unwrap(),
+            HoopKind::Boost => read("hoop_boost.png").unwrap(),
+            _ => read("hoop_fuel.png").unwrap()
         };
-        draw_circle(self.pos.x, self.pos.y, self.size, hoop_color);
+        let texture = Texture2D::from_file_with_format(&file, None);
+            texture.set_filter(FilterMode::Nearest);
+        let texture = Texture2D::from_file_with_format(&file, None);
+        texture.set_filter(FilterMode::Nearest);
+        let shape = self.size*Vec2::ONE;
+        let params = DrawTextureParams { 
+            dest_size: Some(shape),
+            ..Default::default()
+        };
+        draw_texture_ex(texture, self.pos.x - shape.x, self.pos.y - shape.y, WHITE, params);
     }
 
     pub fn update_pos(&mut self) {

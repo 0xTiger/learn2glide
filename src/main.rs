@@ -65,17 +65,17 @@ fn setup_background() {
 #[macroquad::main("learn2glide")]
 async fn main() {
 
-    let mut myplane = Aircraft { ..Default::default() };
+    let mut myplane = Aircraft::default();
     let mut fpss = Vec::new();
-
     let mut hoops = Vec::new();
+
     for i in 1..30 {
         hoops.push(Hoop { 
-            pos: Vec2::new((i * 500) as f32, FLOOR_HEIGHT + 50.), 
-            vel: Vec2::new(3., 6.),
-            accel: GRAVITY,
-            size: 30.,
-            value: 30.,
+            pos: Vec2::new((i * 500) as f32, FLOOR_HEIGHT + 200.), 
+            vel: Vec2::ZERO, //Vec2::new(3., 6.),
+            accel: Vec2::ZERO,
+            size: 100.,
+            value: 20.,
             kind: HoopKind::random()
         });
     }
