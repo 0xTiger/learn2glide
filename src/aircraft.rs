@@ -5,8 +5,6 @@ use macroquad::{
     shapes::*,
     input::*
 };
-
-
 use std::f32::consts::PI;
 use crate::utils::vec2_from_polar;
 
@@ -50,8 +48,7 @@ impl Aircraft {
         let lower = self.pos - 2.0*offset;
         let upper = self.pos - 1.5*offset;
 
-        draw_line(lower.x, lower.y, 
-                    upper.x, upper.y, 3.0, RED);
+        draw_line(lower.x, lower.y, upper.x, upper.y, 3.0, RED);
     }
 
     pub fn rotate(&mut self, amount: f32) {

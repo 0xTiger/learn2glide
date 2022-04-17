@@ -118,7 +118,7 @@ async fn main() {
 
         if myplane.pos.y < FLOOR_HEIGHT {
             death_screen(myplane.pos.x).await;
-            myplane = Aircraft { ..Default::default() };
+            myplane = Aircraft::default();
         }
         next_frame().await
     }
