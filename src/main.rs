@@ -2,6 +2,7 @@ mod utils;
 mod aircraft;
 mod hoops;
 
+use std::fs::read;
 use macroquad::prelude::*;
 use aircraft::Aircraft;
 use hoops::{Hoop, HoopKind};
@@ -82,6 +83,40 @@ async fn main() {
 
     loop {
         setup_background();
+        let regionsize = 1000.;
+        let current_region = (myplane.pos.x as i32 / regionsize as i32, myplane.pos.y as i32 / regionsize as i32);
+        let rendered_regions = vec![
+            (current_region.0 - 1, current_region.1 - 1),
+            (current_region.0, current_region.1 - 1),
+            (current_region.0 + 1, current_region.1 - 1),
+            (current_region.0 - 1, current_region.1),
+            (current_region.0, current_region.1),
+            (current_region.0 + 1, current_region.1),
+            (current_region.0 - 1, current_region.1 + 1),
+            (current_region.0, current_region.1 + 1),
+            (current_region.0 + 1, current_region.1 + 1),
+        ];
+        // TODO add collision detection & drawing only within region
+        let file = read("assets/cloud.png").unwrap();
+        let texture = Texture2D::from_file_with_format(&file, None);
+        texture.set_filter(FilterMode::Nearest);
+
+        for region in rendered_regions {
+            let seed = (region.0 + region.1) * (region.0 + region.1 + 1) / 2 + region.0;
+            rand::srand(seed as u64);
+            for _ in 0..10 {
+                let x = rand::gen_range(0., regionsize);
+                let y = rand::gen_range(0., regionsize);
+                
+                let params = DrawTextureParams { 
+                    dest_size: Some(50.*Vec2::ONE),
+                    ..Default::default()
+                };
+                
+
+                draw_texture_ex(texture, 1000. * region.0 as f32 + x , 1000. * region.1 as f32 + y , WHITE, params);
+            }
+        }
         for hoop in &mut hoops {
             hoop.draw();
             hoop.update_pos();
@@ -93,7 +128,6 @@ async fn main() {
             }
         }
         hoops.retain(|hoop| hoop.kind != HoopKind::Dead);
-
         set_default_camera();
         fpss.push(get_fps() as i16);
         let fps = utils::avg_last_n(&fpss, 10);
