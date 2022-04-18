@@ -2,7 +2,7 @@ mod utils;
 mod aircraft;
 mod hoops;
 
-use std::fs::read;
+use std::collections::HashMap;
 use macroquad::prelude::*;
 use aircraft::Aircraft;
 use hoops::{Hoop, HoopKind};
@@ -59,12 +59,26 @@ fn setup_background() {
         draw_mountain(i, FLOOR_HEIGHT + rand::gen_range(0.0, 200.0), rand::gen_range(0.0, 100.0));
     }
     // Draw floor
-    draw_line(-1e10, FLOOR_HEIGHT, 1e10, FLOOR_HEIGHT, 5.0, GREEN);
+    draw_rectangle(-1e10, FLOOR_HEIGHT, 2e10, -500., GREEN);
 }
 
 
 #[macroquad::main("learn2glide")]
 async fn main() {
+    let texture_names = vec![
+        "aircraft", 
+        "boost", 
+        "hoop_fuel", 
+        "hoop_score", 
+        "hoop_boost", 
+        "cloud"
+    ];
+    let mut textures = HashMap::new();
+    for texture_name in texture_names {
+        let texture = load_texture(format!("assets/{}.png", texture_name).as_str()).await.unwrap();
+        texture.set_filter(FilterMode::Nearest);
+        textures.insert(texture_name, texture);
+    }
 
     let mut myplane = Aircraft::default();
     let mut fpss = Vec::new();
@@ -97,10 +111,8 @@ async fn main() {
             (current_region.0 + 1, current_region.1 + 1),
         ];
         // TODO add collision detection & drawing only within region
-        let file = read("assets/cloud.png").unwrap();
-        let texture = Texture2D::from_file_with_format(&file, None);
-        texture.set_filter(FilterMode::Nearest);
-
+        
+        let texture = *(&textures).get("cloud").unwrap();
         for region in rendered_regions {
             let seed = (region.0 + region.1) * (region.0 + region.1 + 1) / 2 + region.0;
             rand::srand(seed as u64);
@@ -109,16 +121,17 @@ async fn main() {
                 let y = rand::gen_range(0., regionsize);
                 
                 let params = DrawTextureParams { 
-                    dest_size: Some(50.*Vec2::ONE),
+                    dest_size: Some(60.*Vec2::ONE),
                     ..Default::default()
                 };
                 
-
-                draw_texture_ex(texture, 1000. * region.0 as f32 + x , 1000. * region.1 as f32 + y , WHITE, params);
+                if 1000. * region.1 as f32 + y > FLOOR_HEIGHT {
+                    draw_texture_ex(texture, 1000. * region.0 as f32 + x , 1000. * region.1 as f32 + y , WHITE, params);
+                }
             }
         }
         for hoop in &mut hoops {
-            hoop.draw();
+            hoop.draw(&textures);
             hoop.update_pos();
             if (myplane.pos - hoop.pos).length() < hoop.size {
                 hoop.do_effect(&mut myplane);
@@ -141,13 +154,12 @@ async fn main() {
         
         
         set_camera(&cam);
-        myplane.check_input();
+        myplane.check_input(&textures);
         
         // Forces
         let drag = -1e-4 * myplane.vel.powf(2.0);
         myplane.accel = myplane.lift() + GRAVITY + myplane.boost() + drag;
-
-        myplane.draw();
+        myplane.draw(&textures);
         myplane.update_pos();
 
         if myplane.pos.y < FLOOR_HEIGHT {

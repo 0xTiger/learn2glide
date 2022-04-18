@@ -1,5 +1,5 @@
 use super::aircraft::Aircraft;
-use std::fs::read;
+use std::collections::HashMap;
 use macroquad::{
     math::Vec2,
     color::colors::*, 
@@ -41,14 +41,13 @@ impl HoopKind {
 
 impl Hoop {
     // TODO Only read files once
-    pub fn draw(&self) {
-        let file = match self.kind {
-            HoopKind::Fuel => read("assets/hoop_fuel.png").unwrap(),
-            HoopKind::Score => read("assets/hoop_score.png").unwrap(),
-            HoopKind::Boost => read("assets/hoop_boost.png").unwrap(),
-            _ => read("hoop_fuel.png").unwrap()
-        };
-        let texture = Texture2D::from_file_with_format(&file, None);
+    pub fn draw(&self, textures: &HashMap<&str, Texture2D>) {
+        let texture = *match self.kind {
+            HoopKind::Fuel => textures.get("hoop_fuel"),
+            HoopKind::Score => textures.get("hoop_score"),
+            HoopKind::Boost => textures.get("hoop_boost"),
+            _ => textures.get("hoop_fuel")
+        }.unwrap();
         texture.set_filter(FilterMode::Nearest);
         let shape = self.size*Vec2::ONE;
         let params = DrawTextureParams { 

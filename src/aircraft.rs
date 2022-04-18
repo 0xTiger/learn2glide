@@ -1,12 +1,11 @@
 use super::utils;
-use std::fs::read;
 use macroquad::{
     math::Vec2, 
     color::colors::*, 
     input::*,
     texture::*
 };
-use std::f32::consts::PI;
+use std::{f32::consts::PI, collections::HashMap};
 use crate::utils::vec2_from_polar;
 
 pub struct Aircraft {
@@ -32,12 +31,9 @@ impl Default for Aircraft {
 
 
 impl Aircraft {
-    pub fn draw(&self) {
+    pub fn draw(&self, textures: &HashMap<&str, Texture2D>) {
         let glider_size = Vec2::new(80.0, -80.0);
-
-        let file = read("assets/aircraft.png").unwrap();
-        let texture = Texture2D::from_file_with_format(&file, None);
-        texture.set_filter(FilterMode::Nearest);
+        let texture = *textures.get("aircraft").unwrap();
         let params = DrawTextureParams { 
             dest_size: Some(glider_size),
             rotation: self.rot,
@@ -47,10 +43,9 @@ impl Aircraft {
         draw_texture_ex(texture, self.pos.x - glider_size.x, self.pos.y - glider_size.y, WHITE, params);
     }
 
-    pub fn draw_boost(&self) {
+    pub fn draw_boost(&self, textures: &HashMap<&str, Texture2D>) {
         let glider_size = Vec2::new(80.0, -80.0);
-        let file = read("assets/boost.png").unwrap();
-        let texture = Texture2D::from_file_with_format(&file, None);
+        let texture = *textures.get("boost").unwrap();
         texture.set_filter(FilterMode::Nearest);
         let params = DrawTextureParams { 
             dest_size: Some(glider_size),
@@ -87,7 +82,7 @@ impl Aircraft {
         }
     }
 
-    pub fn check_input(&mut self) {
+    pub fn check_input(&mut self, textures: &HashMap<&str, Texture2D>) {
         if is_key_down(KeyCode::Left) {
             self.rotate(0.05);
         }
@@ -96,7 +91,7 @@ impl Aircraft {
         }
         if is_key_down(KeyCode::Space) && self.fuel > 0.0 {
             self.fuel -= 0.2;
-            self.draw_boost();
+            self.draw_boost(textures);
         }
     }    
 }
