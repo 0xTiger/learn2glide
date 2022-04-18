@@ -1,9 +1,10 @@
 use super::utils;
+use std::fs::read;
 use macroquad::{
     math::Vec2, 
     color::colors::*, 
-    shapes::*,
-    input::*
+    input::*,
+    texture::*
 };
 use std::f32::consts::PI;
 use crate::utils::vec2_from_polar;
@@ -32,23 +33,32 @@ impl Default for Aircraft {
 
 impl Aircraft {
     pub fn draw(&self) {
-        let glider_size = 10.0;
-        let offset = vec2_from_polar(glider_size, self.rot);
+        let glider_size = Vec2::new(80.0, -80.0);
 
-        let lower = self.pos - offset;
-        let upper = self.pos + offset;
+        let file = read("assets/aircraft.png").unwrap();
+        let texture = Texture2D::from_file_with_format(&file, None);
+        texture.set_filter(FilterMode::Nearest);
+        let params = DrawTextureParams { 
+            dest_size: Some(glider_size),
+            rotation: self.rot,
+            ..Default::default()
+        };
 
-        draw_line(lower.x, lower.y, upper.x, upper.y, 3.0, GREEN);
+        draw_texture_ex(texture, self.pos.x - glider_size.x, self.pos.y - glider_size.y, WHITE, params);
     }
 
     pub fn draw_boost(&self) {
-        let glider_size = 10.0;
-        let offset = vec2_from_polar(glider_size, self.rot);
+        let glider_size = Vec2::new(80.0, -80.0);
+        let file = read("assets/boost.png").unwrap();
+        let texture = Texture2D::from_file_with_format(&file, None);
+        texture.set_filter(FilterMode::Nearest);
+        let params = DrawTextureParams { 
+            dest_size: Some(glider_size),
+            rotation: self.rot,
+            ..Default::default()
+        };
 
-        let lower = self.pos - 2.0*offset;
-        let upper = self.pos - 1.5*offset;
-
-        draw_line(lower.x, lower.y, upper.x, upper.y, 3.0, RED);
+        draw_texture_ex(texture, self.pos.x - glider_size.x, self.pos.y - glider_size.y, WHITE, params);
     }
 
     pub fn rotate(&mut self, amount: f32) {

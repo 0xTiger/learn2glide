@@ -49,8 +49,6 @@ impl Hoop {
             _ => read("hoop_fuel.png").unwrap()
         };
         let texture = Texture2D::from_file_with_format(&file, None);
-            texture.set_filter(FilterMode::Nearest);
-        let texture = Texture2D::from_file_with_format(&file, None);
         texture.set_filter(FilterMode::Nearest);
         let shape = self.size*Vec2::ONE;
         let params = DrawTextureParams { 
