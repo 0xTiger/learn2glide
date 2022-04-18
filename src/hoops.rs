@@ -43,9 +43,9 @@ impl Hoop {
     // TODO Only read files once
     pub fn draw(&self) {
         let file = match self.kind {
-            HoopKind::Fuel => read("hoop_fuel.png").unwrap(),
-            HoopKind::Score => read("hoop_score.png").unwrap(),
-            HoopKind::Boost => read("hoop_boost.png").unwrap(),
+            HoopKind::Fuel => read("assets/hoop_fuel.png").unwrap(),
+            HoopKind::Score => read("assets/hoop_score.png").unwrap(),
+            HoopKind::Boost => read("assets/hoop_boost.png").unwrap(),
             _ => read("hoop_fuel.png").unwrap()
         };
         let texture = Texture2D::from_file_with_format(&file, None);
