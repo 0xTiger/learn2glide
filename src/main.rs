@@ -11,6 +11,7 @@ use hoops::{Hoop, HoopKind};
 const FLOOR_HEIGHT: f32 = 0.0;
 const GRAVITY: Vec2 = const_vec2!([0., -0.04]);
 const SKY_BLUE: Color = color_u8!(12, 92, 146, 255);
+const LAND_GREEN: Color = color_u8!(13, 128, 36, 255);
 
 fn draw_text_centered(text: &str, x: f32, y: f32, font_size: f32, color: Color) {
     let text_dims = measure_text(text, None, font_size as u16, 1.0);
@@ -54,7 +55,7 @@ fn setup_background(textures: &HashMap<&str, Texture2D>) {
         ..Default::default()
     };
     // Draw floor
-    draw_rectangle(-1e10, FLOOR_HEIGHT, 2e10, -500., GREEN);
+    draw_rectangle(-1e10, FLOOR_HEIGHT, 2e10, -500., LAND_GREEN);
     draw_texture_ex(texture, -1e10, FLOOR_HEIGHT + 1e4, WHITE, params);
 }
 
@@ -70,6 +71,7 @@ async fn main() {
         "cloud",
         "mountain_1",
         "mountain_2",
+        "mountain_3",
         "sky",
         "sky_sunset"
     ];
@@ -115,7 +117,8 @@ async fn main() {
         let cloud_texture = *(&textures).get("cloud").unwrap();
         let mountain_textures = vec![
             *(&textures).get("mountain_1").unwrap(),
-            *(&textures).get("mountain_2").unwrap()
+            *(&textures).get("mountain_2").unwrap(),
+            *(&textures).get("mountain_3").unwrap()
         ];
         for region in rendered_regions {
             let seed = (region.0 + region.1) * (region.0 + region.1 + 1) / 2 + region.0;
