@@ -20,7 +20,7 @@ fn draw_text_centered(text: &str, x: f32, y: f32, font_size: f32, color: Color) 
 }
 
 
-async fn death_screen(score: f32) {
+async fn death_screen(score: u32) {
     loop {
         if is_key_down(KeyCode::Enter) { break }
         set_default_camera();
@@ -28,7 +28,7 @@ async fn death_screen(score: f32) {
         let x = screen_width() / 2.0;
         let y = screen_height() / 2.0;
         draw_text_centered("You flew a distance of:", x, y - 100.0, 50.0, WHITE);
-        draw_text_centered(format!("{}", score.round()).as_str(), x, y, 100.0, WHITE);
+        draw_text_centered(&score.to_string(), x, y, 100.0, WHITE);
         draw_text_centered("Press ENTER to play again.", x, y + 100.0, 50.0, WHITE);
         next_frame().await
     }
@@ -121,21 +121,21 @@ async fn main() {
             let seed = (region.0 + region.1) * (region.0 + region.1 + 1) / 2 + region.0;
             rand::srand(seed as u64);
             for _ in 0..10 {
-                let x = rand::gen_range(0., regionsize);
-                let y = rand::gen_range(0., regionsize);
+                let x = regionsize * region.0 as f32 + rand::gen_range(0., regionsize);
+                let y = regionsize * region.1 as f32 + rand::gen_range(0., regionsize);
                 
                 let params = DrawTextureParams { 
                     dest_size: Some(60.*Vec2::ONE),
                     ..Default::default()
                 };
                 
-                if 1000. * region.1 as f32 + y > FLOOR_HEIGHT + 300. {
-                    draw_texture_ex(cloud_texture, 1000. * region.0 as f32 + x , 1000. * region.1 as f32 + y , WHITE, params);
+                if y > FLOOR_HEIGHT + 300. {
+                    draw_texture_ex(cloud_texture, x, y, WHITE, params);
                 }
             }
             if region.1 == 0 {
                 for _ in 0..2 {
-                    let x = rand::gen_range(0., regionsize);
+                    let x = regionsize * region.0 as f32 + rand::gen_range(0., regionsize);
                     let texture = *rand::ChooseRandom::choose(&mountain_textures).unwrap();
                     let mountain_height = texture.height() * 10.;
                     let mountain_width = texture.width() * 10.;
@@ -143,7 +143,7 @@ async fn main() {
                         dest_size: Some(Vec2::new(mountain_width, -mountain_height)),
                         ..Default::default()
                     };
-                    draw_texture_ex(texture, 1000. * region.0 as f32 + x , FLOOR_HEIGHT + mountain_height, WHITE, params)
+                    draw_texture_ex(texture, x, FLOOR_HEIGHT + mountain_height, WHITE, params)
                 }
             }
         }
@@ -180,7 +180,7 @@ async fn main() {
         myplane.update_pos();
 
         if myplane.pos.y < FLOOR_HEIGHT {
-            death_screen(myplane.pos.x).await;
+            death_screen(myplane.pos.x as u32 + myplane.score).await;
             myplane = Aircraft::default();
         }
         next_frame().await

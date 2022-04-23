@@ -13,7 +13,8 @@ pub struct Aircraft {
     pub vel: Vec2,
     pub accel: Vec2,
     pub rot: f32, // pi/2 to - pi/2
-    pub fuel: f32
+    pub fuel: f32,
+    pub score: u32
 }
 
 
@@ -25,6 +26,7 @@ impl Default for Aircraft {
             accel: Vec2::ZERO,
             rot: 0.0,
             fuel: 100.0,
+            score: 0
         }
     }
 }

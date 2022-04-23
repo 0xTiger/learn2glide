@@ -66,6 +66,7 @@ impl Hoop {
         match self.kind {
             HoopKind::Fuel => {plane.fuel += self.value}
             HoopKind::Boost => {plane.vel *= self.value}
+            HoopKind::Score => {plane.score += self.value as u32}
             _ => {}
         }
     }
