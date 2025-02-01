@@ -9,7 +9,7 @@ use hoops::{Hoop, HoopKind};
 
 
 const FLOOR_HEIGHT: f32 = 0.0;
-const GRAVITY: Vec2 = const_vec2!([0., -0.04]);
+const GRAVITY: Vec2 = Vec2::from_array([0., -0.04]);
 const SKY_BLUE: Color = color_u8!(12, 92, 146, 255);
 const LAND_GREEN: Color = color_u8!(13, 128, 36, 255);
 
@@ -17,7 +17,7 @@ fn draw_text_centered(text: &str, x: f32, y: f32, font_size: f32, color: Color) 
     let text_dims = measure_text(text, None, font_size as u16, 1.0);
     draw_text(text, x - text_dims.width / 2.0, 
                     y + text_dims.height / 2.0, 
-                    font_size, color)
+                    font_size, color);
 }
 
 
@@ -49,14 +49,14 @@ fn draw_hud(plane: &Aircraft, fps: f32) {
 fn setup_background(textures: &HashMap<&str, Texture2D>) {
     // TODO Use dithered gradient for sky
     clear_background(SKY_BLUE);
-    let texture = *textures.get("sky").unwrap();
+    let texture = textures.get("sky").unwrap();
     let params = DrawTextureParams { 
         dest_size: Some(Vec2::new(2e10, -1e4)),
         ..Default::default()
     };
     // Draw floor
     draw_rectangle(-1e10, FLOOR_HEIGHT, 2e10, -500., LAND_GREEN);
-    draw_texture_ex(texture, -1e10, FLOOR_HEIGHT + 1e4, WHITE, params);
+    draw_texture_ex(&texture, -1e10, FLOOR_HEIGHT + 1e4, WHITE, params);
 }
 
 
@@ -114,11 +114,11 @@ async fn main() {
         ];
         // TODO add collision detection & drawing only within region
         
-        let cloud_texture = *(&textures).get("cloud").unwrap();
+        let cloud_texture = (&textures).get("cloud").unwrap();
         let mountain_textures = vec![
-            *(&textures).get("mountain_1").unwrap(),
-            *(&textures).get("mountain_2").unwrap(),
-            *(&textures).get("mountain_3").unwrap()
+            (&textures).get("mountain_1").unwrap(),
+            (&textures).get("mountain_2").unwrap(),
+            (&textures).get("mountain_3").unwrap()
         ];
         for region in rendered_regions {
             let seed = (region.0 + region.1) * (region.0 + region.1 + 1) / 2 + region.0;
@@ -133,20 +133,20 @@ async fn main() {
                 };
                 
                 if y > FLOOR_HEIGHT + 300. {
-                    draw_texture_ex(cloud_texture, x, y, WHITE, params);
+                    draw_texture_ex(&cloud_texture, x, y, WHITE, params);
                 }
             }
             if region.1 == 0 {
                 for _ in 0..2 {
                     let x = regionsize * region.0 as f32 + rand::gen_range(0., regionsize);
-                    let texture = *rand::ChooseRandom::choose(&mountain_textures).unwrap();
+                    let texture = rand::ChooseRandom::choose(&mountain_textures).unwrap();
                     let mountain_height = texture.height() * 10.;
                     let mountain_width = texture.width() * 10.;
                     let params = DrawTextureParams { 
                         dest_size: Some(Vec2::new(mountain_width, -mountain_height)),
                         ..Default::default()
                     };
-                    draw_texture_ex(texture, x, FLOOR_HEIGHT + mountain_height, WHITE, params)
+                    draw_texture_ex(&texture, x, FLOOR_HEIGHT + mountain_height, WHITE, params)
                 }
             }
         }
@@ -167,7 +167,7 @@ async fn main() {
         draw_hud(&myplane, fps);
 
         let cam = Camera2D {
-            zoom: 0.002 * Vec2::ONE,
+            zoom: Vec2 { x: 0.002, y: -0.002 },
             target: myplane.pos,
             ..Default::default()
         };

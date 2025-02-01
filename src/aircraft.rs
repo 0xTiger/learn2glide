@@ -35,19 +35,19 @@ impl Default for Aircraft {
 impl Aircraft {
     pub fn draw(&self, textures: &HashMap<&str, Texture2D>) {
         let glider_size = Vec2::new(80.0, -80.0);
-        let texture = *textures.get("aircraft").unwrap();
+        let texture = textures.get("aircraft").unwrap();
         let params = DrawTextureParams { 
             dest_size: Some(glider_size),
             rotation: self.rot,
             ..Default::default()
         };
 
-        draw_texture_ex(texture, self.pos.x - glider_size.x, self.pos.y - glider_size.y, WHITE, params);
+        draw_texture_ex(&texture, self.pos.x - glider_size.x, self.pos.y - glider_size.y, WHITE, params);
     }
 
     pub fn draw_boost(&self, textures: &HashMap<&str, Texture2D>) {
         let glider_size = Vec2::new(80.0, -80.0);
-        let texture = *textures.get("boost").unwrap();
+        let texture = textures.get("boost").unwrap();
         texture.set_filter(FilterMode::Nearest);
         let params = DrawTextureParams { 
             dest_size: Some(glider_size),
@@ -55,7 +55,7 @@ impl Aircraft {
             ..Default::default()
         };
 
-        draw_texture_ex(texture, self.pos.x - glider_size.x, self.pos.y - glider_size.y, WHITE, params);
+        draw_texture_ex(&texture, self.pos.x - glider_size.x, self.pos.y - glider_size.y, WHITE, params);
     }
 
     pub fn rotate(&mut self, amount: f32) {

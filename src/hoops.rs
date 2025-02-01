@@ -42,7 +42,7 @@ impl HoopKind {
 impl Hoop {
     // TODO Only read files once
     pub fn draw(&self, textures: &HashMap<&str, Texture2D>) {
-        let texture = *match self.kind {
+        let texture = match self.kind {
             HoopKind::Fuel => textures.get("hoop_fuel"),
             HoopKind::Score => textures.get("hoop_score"),
             HoopKind::Boost => textures.get("hoop_boost"),
@@ -54,7 +54,7 @@ impl Hoop {
             dest_size: Some(shape),
             ..Default::default()
         };
-        draw_texture_ex(texture, self.pos.x - shape.x, self.pos.y - shape.y, WHITE, params);
+        draw_texture_ex(&texture, self.pos.x - shape.x, self.pos.y - shape.y, WHITE, params);
     }
 
     pub fn update_pos(&mut self) {
