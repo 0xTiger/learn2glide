@@ -139,7 +139,7 @@ async fn main() {
             if region.1 == 0 {
                 for _ in 0..2 {
                     let x = regionsize * region.0 as f32 + rand::gen_range(0., regionsize);
-                    let texture = rand::ChooseRandom::choose(&mountain_textures).unwrap();
+                    let texture = rand::ChooseRandom::choose(&mountain_textures[..]).unwrap();
                     let mountain_height = texture.height() * 10.;
                     let mountain_width = texture.width() * 10.;
                     let params = DrawTextureParams { 
